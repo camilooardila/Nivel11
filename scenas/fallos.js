@@ -1274,8 +1274,8 @@ class scenaFallos extends Phaser.Scene {
     const distance = Phaser.Math.Distance.Between(x, y, 400, 300);
     if (distance < 80) return;
 
-    // Límite máximo de barreras para evitar problemas de rendimiento
-    const maxBarriers = 20;
+    // Límite máximo de barreras aumentado
+    const maxBarriers = 50;
     if (this.barriers.length >= maxBarriers) {
       // Mostrar mensaje de advertencia sin reiniciar el nivel
       const warningText = this.add.text(400, 100, '¡Límite de barreras alcanzado!', {
@@ -1819,8 +1819,8 @@ class scenaFallos extends Phaser.Scene {
       return;
     }
     
-    // Un solo nivel con 400 puntos para mayor desafío
-    const requiredScore = 400;
+    // Un solo nivel con 350 puntos para mayor desafío
+    const requiredScore = 350;
     console.log('Verificando nivel - Score actual:', this.score, 'Requerido:', requiredScore);
     
     if (this.score >= requiredScore) {
@@ -2916,8 +2916,8 @@ class scenaFallos extends Phaser.Scene {
       .setStrokeStyle(3, 0x00ff00)
       .setInteractive()
       .on('pointerdown', () => {
-        console.log('Cambiando a escena Rompecabezas');
-        this.scene.start('Rompecabezas');
+        console.log('Cambiando a escena DroneRepairScene');
+        this.scene.start('DroneRepairScene');
       })
       .on('pointerover', () => {
         continueBtn.setFillStyle(0x008800);
@@ -2936,8 +2936,8 @@ class scenaFallos extends Phaser.Scene {
     
     // Transición automática después de 5 segundos
     this.time.delayedCall(5000, () => {
-      console.log('Transición automática a Rompecabezas');
-      this.scene.start('Rompecabezas');
+      console.log('Transición automática a DroneRepairScene');
+      this.scene.start('DroneRepairScene');
     });
   }
 

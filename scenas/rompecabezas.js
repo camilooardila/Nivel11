@@ -1020,7 +1020,7 @@ class Rompecabezas extends Phaser.Scene {
     // Ajustar parámetros según el nivel
     switch(nivel) {
       case 1:
-        cantidadInicial = 3; // Pocos nanorrobots en nivel 1
+        cantidadInicial = 8; // Más nanorrobots en nivel 1 para mayor desafío
         velocidadReplicacion = 4000; // Replicación más lenta
         velocidadMovimiento = 40; // Movimiento más lento
         break;
