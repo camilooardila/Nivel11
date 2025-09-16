@@ -13,6 +13,10 @@ class scenaFallos extends Phaser.Scene {
     this.maxLevel = 1;
     this.gameCompleted = false;
     this.levelCompleting = false;
+    this.lastBarrierTime = 0;
+    this.barrierCooldown = 300; // Cooldown base de 300ms entre barreras
+    this.initialBarrierDelay = 2000; // No permitir barreras en los primeros 2 segundos
+    this.gameStartTime = 0; // Tiempo de inicio del juego
   }
 
   preload() {
@@ -755,6 +759,12 @@ class scenaFallos extends Phaser.Scene {
     this.lives = 3;
     this.particles = [];
     this.currentLevel = 1;
+    
+    // Establecer cooldown inicial más estricto para evitar colocación temprana de barreras
+    this.lastBarrierTime = this.time.now;
+    this.barrierCooldown = 300; // Cooldown base de 300ms
+    this.initialBarrierDelay = 2000; // No permitir barreras en los primeros 2 segundos
+    this.gameStartTime = this.time.now;
 
     // Fondo personalizado basado en contencion_mejorada
     this.createContainmentBackground();
@@ -1270,50 +1280,128 @@ class scenaFallos extends Phaser.Scene {
   }
 
   placeBarrier(x, y) {
-    // Verificar que no esté muy cerca del núcleo
-    const distance = Phaser.Math.Distance.Between(x, y, 400, 300);
-    if (distance < 80) return;
-
-    // Límite máximo de barreras aumentado
-    const maxBarriers = 50;
-    if (this.barriers.length >= maxBarriers) {
-      // Mostrar mensaje de advertencia sin reiniciar el nivel
-      const warningText = this.add.text(400, 100, '¡Límite de barreras alcanzado!', {
-        fontSize: '24px',
-        fill: '#ff6666',
-        fontFamily: 'Arial Black',
-        stroke: '#000000',
-        strokeThickness: 2
-      }).setOrigin(0.5);
+    try {
+      console.log(`[DEBUG] Colocando barrera en posición (${x}, ${y}). Barreras actuales: ${this.barriers.length}`);
       
-      // Hacer que el mensaje desaparezca después de 2 segundos
-      this.tweens.add({
-        targets: warningText,
-        alpha: 0,
-        duration: 2000,
-        onComplete: () => warningText.destroy()
-      });
+      // Verificar delay inicial para evitar colocación temprana de barreras
+      const currentTime = this.time.now;
+      const timeSinceGameStart = currentTime - (this.gameStartTime || 0);
       
-      return; // No crear más barreras
-    }
-
-    // Crear barrera mejorada
-    const barrier = this.createEnhancedBarrier(x, y);
-    this.barriers.push(barrier);
-    
-    // SECUENCIA DE SONIDOS ÉPICOS PARA BARRERAS
-    
-    // Sonido inicial de carga de energía
-    if (this.sounds && this.sounds.barrierCharge) {
-      this.sounds.barrierCharge.play();
-    }
-    
-    // Sonido de activación con delay
-    this.time.delayedCall(200, () => {
-      if (this.sounds && this.sounds.barrierActivate) {
-        this.sounds.barrierActivate.play();
+      if (timeSinceGameStart < this.initialBarrierDelay) {
+        console.log(`[DEBUG] Delay inicial activo. Tiempo restante: ${Math.ceil((this.initialBarrierDelay - timeSinceGameStart) / 1000)}s`);
+        
+        // Mostrar mensaje de advertencia
+        const warningText = this.add.text(400, 150, `Espera ${Math.ceil((this.initialBarrierDelay - timeSinceGameStart) / 1000)}s antes de colocar barreras`, {
+          fontSize: '20px',
+          fill: '#ffaa00',
+          fontFamily: 'Arial Black',
+          stroke: '#000000',
+          strokeThickness: 2
+        }).setOrigin(0.5);
+        
+        // Hacer que el mensaje desaparezca después de 1.5 segundos
+        this.tweens.add({
+          targets: warningText,
+          alpha: 0,
+          duration: 1500,
+          onComplete: () => {
+            try {
+              warningText.destroy();
+            } catch (e) {
+              console.error('[ERROR] Error al destruir texto de advertencia:', e);
+            }
+          }
+        });
+        
+        return;
       }
-    });
+      
+      // Verificar cooldown para evitar spam de barreras
+      if (currentTime - this.lastBarrierTime < this.barrierCooldown) {
+        console.log('[DEBUG] Cooldown activo, cancelando colocación de barrera');
+        return;
+      }
+      this.lastBarrierTime = currentTime;
+      
+      // Permitir colocar barreras cerca del núcleo con advertencia
+      const distance = Phaser.Math.Distance.Between(x, y, 400, 300);
+      if (distance < 80) {
+        console.log('[DEBUG] Barrera cerca del núcleo - usando versión optimizada');
+        // No cancelar, solo registrar para optimización
+      }
+
+      // Límite máximo de barreras para evitar problemas de rendimiento
+      const maxBarriers = 25; // Reducido para mejor rendimiento
+      if (this.barriers.length >= maxBarriers) {
+        console.log('[DEBUG] Límite de barreras alcanzado, mostrando advertencia');
+        // Mostrar mensaje de advertencia sin reiniciar el nivel
+        const warningText = this.add.text(400, 100, '¡Límite de barreras alcanzado!', {
+          fontSize: '24px',
+          fill: '#ff6666',
+          fontFamily: 'Arial Black',
+          stroke: '#000000',
+          strokeThickness: 2
+        }).setOrigin(0.5);
+        
+        // Hacer que el mensaje desaparezca después de 2 segundos
+        this.tweens.add({
+          targets: warningText,
+          alpha: 0,
+          duration: 2000,
+          onComplete: () => {
+            try {
+              warningText.destroy();
+            } catch (e) {
+              console.error('[ERROR] Error al destruir texto de advertencia:', e);
+            }
+          }
+        });
+        
+        return; // No crear más barreras
+      }
+
+      // Crear barrera mejorada
+      console.log('[DEBUG] Creando barrera mejorada...');
+      const barrier = this.createEnhancedBarrier(x, y);
+      if (barrier) {
+        this.barriers.push(barrier);
+        console.log(`[DEBUG] Barrera creada exitosamente. Total de barreras: ${this.barriers.length}`);
+        
+        // Verificar colisiones inmediatas
+        this.checkBarrierCollisions(barrier);
+      } else {
+        console.error('[ERROR] No se pudo crear la barrera');
+        return;
+      }
+      
+      // SECUENCIA DE SONIDOS ÉPICOS PARA BARRERAS
+      
+      // Sonido inicial de carga de energía
+      if (this.sounds && this.sounds.barrierCharge) {
+        try {
+          this.sounds.barrierCharge.play();
+          console.log('[DEBUG] Sonido de carga de barrera reproducido');
+        } catch (e) {
+          console.error('[ERROR] Error al reproducir sonido de carga:', e);
+        }
+      }
+      
+      // Sonido de activación con delay
+      this.time.delayedCall(200, () => {
+        try {
+          if (this.sounds && this.sounds.barrierActivate) {
+            this.sounds.barrierActivate.play();
+            console.log('[DEBUG] Sonido de activación de barrera reproducido');
+          }
+        } catch (e) {
+          console.error('[ERROR] Error al reproducir sonido de activación:', e);
+        }
+      });
+    } catch (error) {
+      console.error('[ERROR] Error crítico en placeBarrier:', error);
+      console.error('[ERROR] Stack trace:', error.stack);
+      // No reiniciar el nivel, solo registrar el error
+    }
     
     // Campo de energía estabilizándose
     this.time.delayedCall(400, () => {
@@ -1335,13 +1423,28 @@ class scenaFallos extends Phaser.Scene {
         this.sounds.shieldStabilize.play();
       }
     });
-    
-    // Verificar colisiones inmediatas
-    this.checkBarrierCollisions(barrier);
   }
 
   createEnhancedBarrier(x, y) {
-    const container = this.add.container(x, y);
+    try {
+      console.log(`[DEBUG] Iniciando creación de barrera en (${x}, ${y})`);
+      
+      // Verificar si estamos cerca del núcleo para usar versión ultra-simplificada
+      const distanceToCore = Phaser.Math.Distance.Between(x, y, 400, 300);
+      const isNearCore = distanceToCore < 120;
+      
+      if (isNearCore) {
+        console.log('[DEBUG] Creando barrera simplificada cerca del núcleo');
+        const simplifiedBarrier = this.createSimplifiedBarrier(x, y);
+        if (simplifiedBarrier) {
+          return simplifiedBarrier;
+        } else {
+          console.warn('[WARN] Fallo al crear barrera simplificada, usando versión normal');
+          // Continuar con la creación normal si falla la simplificada
+        }
+      }
+      
+      const container = this.add.container(x, y);
     
     // Núcleo central simplificado
     const core = this.add.graphics();
@@ -1369,16 +1472,18 @@ class scenaFallos extends Phaser.Scene {
     ring.strokeCircle(0, 0, 25);
     container.add(ring);
     
-    // Líneas de energía radiales simplificadas
-    const energyLines = [];
-    for (let i = 0; i < 6; i++) {
-      const angle = (i / 6) * Math.PI * 2;
-      const line = this.add.line(0, 0, 0, 0, 
-        Math.cos(angle) * 30, Math.sin(angle) * 30, 0x88ffcc);
-      line.setLineWidth(2);
-      line.setAlpha(0.8);
-      energyLines.push(line);
-      container.add(line);
+    // Líneas de energía radiales simplificadas (solo si no hay muchas barreras)
+    if (this.barriers.length < 20) {
+      const energyLines = [];
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2;
+        const line = this.add.line(0, 0, 0, 0, 
+          Math.cos(angle) * 30, Math.sin(angle) * 30, 0x88ffcc);
+        line.setLineWidth(2);
+        line.setAlpha(0.8);
+        energyLines.push(line);
+        container.add(line);
+      }
     }
     
     // Partículas de energía simplificadas (sin animaciones)
@@ -1408,31 +1513,91 @@ class scenaFallos extends Phaser.Scene {
       ease: 'Back.easeOut'
     });
     
-    // Solo una animación suave de pulso para el núcleo
-    this.tweens.add({
-      targets: core,
-      scaleX: { from: 1, to: 1.2 },
-      scaleY: { from: 1, to: 1.2 },
-      duration: 2000,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut'
-    });
+    // Solo una animación suave de pulso para el núcleo (solo si hay pocas barreras)
+    if (this.barriers.length < 15) {
+      this.tweens.add({
+        targets: core,
+        scaleX: { from: 1, to: 1.2 },
+        scaleY: { from: 1, to: 1.2 },
+        duration: 2000,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    }
     
-    // Crear partículas electromagnéticas
-    this.createElectromagneticParticles(x, y, container);
+      // Crear partículas electromagnéticas solo si hay pocas barreras
+      if (this.barriers.length < 10) {
+        this.createElectromagneticParticles(x, y, container);
+      }
 
-    return container;
+      console.log('[DEBUG] Barrera creada exitosamente con animaciones optimizadas');
+      return container;
+    } catch (error) {
+      console.error('[ERROR] Error crítico en createEnhancedBarrier:', error);
+      console.error('[ERROR] Stack trace:', error.stack);
+      // Crear una barrera simple como fallback
+      const fallbackBarrier = this.add.circle(x, y, 20, 0x00ff00, 0.5);
+      console.log('[DEBUG] Barrera de respaldo creada');
+      return fallbackBarrier;
+    }
+  }
+  
+  createSimplifiedBarrier(x, y) {
+    try {
+      console.log(`[DEBUG] Creando barrera ultra-simplificada en (${x}, ${y})`);
+      
+      // Barrera ultra-simple: solo un círculo con borde
+      const barrier = this.add.graphics();
+      barrier.x = x;
+      barrier.y = y;
+      
+      // Núcleo simple
+      barrier.fillStyle(0x00ffaa, 0.6);
+      barrier.lineStyle(3, 0x66ffcc, 0.9);
+      barrier.fillCircle(0, 0, 25);
+      barrier.strokeCircle(0, 0, 25);
+      
+      // Punto central
+      barrier.fillStyle(0x88ffff, 0.9);
+      barrier.fillCircle(0, 0, 6);
+      
+      // Efecto de aparición simple sin animaciones complejas
+      barrier.setScale(0);
+      barrier.setAlpha(0);
+      
+      this.tweens.add({
+        targets: barrier,
+        scaleX: 1,
+        scaleY: 1,
+        alpha: 1,
+        duration: 200,
+        ease: 'Back.easeOut'
+      });
+      
+      console.log('[DEBUG] Barrera ultra-simplificada creada exitosamente');
+      return barrier;
+    } catch (error) {
+      console.error('[ERROR] Error en createSimplifiedBarrier:', error);
+      // Fallback extremo: solo un círculo básico
+      const basicBarrier = this.add.circle(x, y, 20, 0x00ff00, 0.5);
+      return basicBarrier;
+    }
   }
 
   createElectromagneticParticles(x, y, container) {
+    try {
+      console.log('[DEBUG] Creando partículas electromagnéticas optimizadas...');
     // Crear partículas electromagnéticas simples con gráficos
     const particles = [];
     const colors = [0x00ffff, 0x0088ff, 0x44aaff, 0x88ccff];
     
+    // Reducir número de partículas según la cantidad de barreras
+    const maxParticles = this.barriers.length > 20 ? 2 : (this.barriers.length > 10 ? 4 : 6);
+    
     // Crear partículas orbitales simples
-    for (let i = 0; i < 6; i++) {
-      const angle = (i / 6) * Math.PI * 2;
+    for (let i = 0; i < maxParticles; i++) {
+      const angle = (i / maxParticles) * Math.PI * 2;
       const radius = 35 + (i * 3);
       const particleX = Math.cos(angle) * radius;
       const particleY = Math.sin(angle) * radius;
@@ -1443,39 +1608,52 @@ class scenaFallos extends Phaser.Scene {
       particles.push(particle);
       container.add(particle);
       
-      // Animación orbital
-      this.tweens.add({
-        targets: particle,
-        x: Math.cos(angle + Math.PI * 2) * radius,
-        y: Math.sin(angle + Math.PI * 2) * radius,
-        duration: 3000 + (i * 200),
-        repeat: -1,
-        ease: 'Linear'
-      });
-      
-      // Efecto de parpadeo
-      this.tweens.add({
-        targets: particle,
-        alpha: { from: 0.8, to: 0.3 },
-        duration: 500 + (i * 100),
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut'
+      // Animación orbital solo si hay pocas barreras
+      if (this.barriers.length < 15) {
+        this.tweens.add({
+          targets: particle,
+          x: Math.cos(angle + Math.PI * 2) * radius,
+          y: Math.sin(angle + Math.PI * 2) * radius,
+          duration: 3000 + (i * 200),
+          repeat: -1,
+          ease: 'Linear'
+        });
+        
+        // Efecto de parpadeo solo si hay muy pocas barreras
+        if (this.barriers.length < 8) {
+          this.tweens.add({
+            targets: particle,
+            alpha: { from: 0.8, to: 0.3 },
+            duration: 500 + (i * 100),
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+          });
+        }
+      }
+    }
+    
+    // Ondas de energía radiales solo si hay muy pocas barreras
+    if (this.barriers.length < 10) {
+      this.time.addEvent({
+        delay: 2000, // Aumentar delay
+        callback: () => {
+          if (container && container.active) {
+            this.createEnergyPulse(x, y);
+          }
+        },
+        repeat: 5 // Limitar repeticiones
       });
     }
     
-    // Ondas de energía radiales
-    this.time.addEvent({
-      delay: 1000,
-      callback: () => {
-        if (container && container.active) {
-          this.createEnergyPulse(x, y);
-        }
-      },
-      loop: true
-    });
-    
-    return particles;
+      console.log('[DEBUG] Partículas electromagnéticas optimizadas creadas exitosamente');
+      return particles;
+    } catch (error) {
+      console.error('[ERROR] Error en createElectromagneticParticles:', error);
+      console.error('[ERROR] Stack trace:', error.stack);
+      // Retornar array vacío como fallback
+      return [];
+    }
   }
   
   createEnergyPulse(x, y) {
@@ -1515,10 +1693,17 @@ class scenaFallos extends Phaser.Scene {
   }
 
   checkBarrierCollisions(barrier) {
-    // Validar que existan nanobots y la barrera
-    if (!this.nanobots || !barrier || this.nanobots.length === 0) {
-      return;
-    }
+    try {
+      // Validar que existan nanobots y la barrera
+      if (!this.nanobots || !barrier || this.nanobots.length === 0) {
+        return;
+      }
+      
+      // Validar que la barrera tenga propiedades válidas
+      if (typeof barrier.x !== 'number' || typeof barrier.y !== 'number') {
+        console.warn('[WARN] Barrera con coordenadas inválidas:', barrier);
+        return;
+      }
     
     // Limitar el número de nanobots verificados por barrera para mejorar rendimiento
     const maxNanobotsToCheck = Math.min(10, this.nanobots.length);
@@ -1573,9 +1758,13 @@ class scenaFallos extends Phaser.Scene {
         this.destroyNanobot(nanobot, i);
       }
     }
+    } catch (error) {
+      console.error('[ERROR] Error en checkBarrierCollisions:', error);
+      console.error('[ERROR] Stack trace:', error.stack);
+    }
   }
 
-  destroyNanobot(nanobot, index) {
+  destroyNanobot(nanobot, index, checkCompletion = true) {
     // Validar que el nanobot existe y el índice es válido
     if (!nanobot || !this.nanobots || index < 0 || index >= this.nanobots.length) {
       return;
@@ -1615,26 +1804,29 @@ class scenaFallos extends Phaser.Scene {
     // Destruir nanobot
     nanobot.destroy();
     
-    // Calcular puntuación balanceada según el tipo de enemigo
-    let pointsEarned;
-    if (isNanoroboticShip) {
-      // Las naves nanorobóticas otorgan 30 puntos fijos
-      pointsEarned = 30;
-    } else {
-      // Nanobots regulares otorgan puntos base
-      pointsEarned = 10 * this.currentLevel;
+    // Solo otorgar puntos si no es por tocar el núcleo
+    if (checkCompletion) {
+      // Calcular puntuación balanceada según el tipo de enemigo
+      let pointsEarned;
+      if (isNanoroboticShip) {
+        // Las naves nanorobóticas otorgan 30 puntos fijos
+        pointsEarned = 30;
+      } else {
+        // Nanobots regulares otorgan puntos base
+        pointsEarned = 10 * this.currentLevel;
+      }
+      
+      this.score += pointsEarned;
+      if (this.scoreText) {
+        this.scoreText.setText('Puntos: ' + this.score);
+      }
+      
+      // Crear animación espectacular de puntos
+      this.createSpectacularPointsAnimation(nanobot.x, nanobot.y, pointsEarned);
+      
+      // Verificar si se completó el nivel solo si no es por tocar el núcleo
+      this.checkLevelCompletion();
     }
-    
-    this.score += pointsEarned;
-    if (this.scoreText) {
-      this.scoreText.setText('Puntos: ' + this.score);
-    }
-    
-    // Crear animación espectacular de puntos
-    this.createSpectacularPointsAnimation(nanobot.x, nanobot.y, pointsEarned);
-    
-    // Verificar si se completó el nivel
-    this.checkLevelCompletion();
   }
 
   createExplosionEffect(x, y) {
@@ -1933,8 +2125,8 @@ class scenaFallos extends Phaser.Scene {
     // Determinar si es una nave nanorobótica o nanobot regular
     const isNanoroboticShip = nanobot.getData && nanobot.getData('isNanoroboticShip');
     
-    nanobot.destroy();
-    this.nanobots.splice(index, 1);
+    // Usar destroyNanobot sin verificar completación del nivel
+    this.destroyNanobot(nanobot, index, false);
     
     // SIEMPRE perder vida cuando un nanobot llega al núcleo
     this.lives--;
@@ -1963,8 +2155,8 @@ class scenaFallos extends Phaser.Scene {
       onComplete: () => damageFlash.destroy()
     });
     
-    // Mostrar puntos perdidos
-    const lostPointsText = this.add.text(nanobot.x, nanobot.y, `-${pointsLost}`, {
+    // Mostrar puntos perdidos en la posición del núcleo ya que el nanobot fue destruido
+    const lostPointsText = this.add.text(400, 300, `-${pointsLost}`, {
       fontSize: '20px',
       fill: '#ff4444',
       fontFamily: 'Arial Bold'
