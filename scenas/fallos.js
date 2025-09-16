@@ -3104,7 +3104,7 @@ class scenaFallos extends Phaser.Scene {
     });
     
     // Botón para continuar a la siguiente escena
-    const continueBtn = this.add.rectangle(400, 450, 220, 60, 0x006600, 0.9)
+    const continueBtn = this.add.rectangle(400, 450, 280, 60, 0x006600, 0.9)
       .setStrokeStyle(3, 0x00ff00)
       .setInteractive()
       .on('pointerdown', () => {
@@ -3120,11 +3120,34 @@ class scenaFallos extends Phaser.Scene {
         continueBtn.setScale(1.0);
       });
     
-    this.add.text(400, 450, 'CONTINUAR', {
-      fontSize: '20px',
+    const continueText = this.add.text(400, 450, 'HAZ CLICK PARA CONTINUAR', {
+      fontSize: '18px',
       fill: '#ffffff',
-      fontFamily: 'Arial Bold'
+      fontFamily: 'Arial Bold',
+      stroke: '#004400',
+      strokeThickness: 2
     }).setOrigin(0.5);
+    
+    // Animación del texto del botón
+    this.tweens.add({
+      targets: continueText,
+      scaleX: 1.1,
+      scaleY: 1.1,
+      duration: 800,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+    
+    // Animación de brillo del botón
+    this.tweens.add({
+      targets: continueBtn,
+      alpha: 0.7,
+      duration: 1200,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Power2'
+    });
     
     // Transición automática después de 5 segundos
     this.time.delayedCall(5000, () => {

@@ -417,6 +417,148 @@ class Rompecabezas extends Phaser.Scene {
     
     // Los sonidos sintéticos ya están creados en createSounds()
     // Se acceden a través de this.sounds.nombreDelSonido.play()
+    
+    // Agregar estilos CSS para móviles
+    this.agregarEstilosMoviles();
+  }
+  
+  agregarEstilosMoviles() {
+    // Crear elemento de estilo para SweetAlert2 móvil
+    const style = document.createElement('style');
+    style.textContent = `
+      /* Estilos para SweetAlert2 en móviles */
+      .mobile-container {
+        padding: 0 !important;
+      }
+      
+      .mobile-popup {
+        width: 90% !important;
+        max-width: 400px !important;
+        margin: 0 auto !important;
+        padding: 1rem !important;
+        font-size: 14px !important;
+      }
+      
+      .mobile-title {
+        font-size: 18px !important;
+        line-height: 1.2 !important;
+        margin-bottom: 0.5rem !important;
+      }
+      
+      .mobile-content {
+        font-size: 14px !important;
+        line-height: 1.3 !important;
+        padding: 0.5rem 0 !important;
+      }
+      
+      .mobile-button {
+        font-size: 14px !important;
+        padding: 0.5rem 1rem !important;
+        margin-top: 1rem !important;
+        background: linear-gradient(45deg, #00aa00, #00ff00) !important;
+        border: none !important;
+        border-radius: 8px !important;
+        color: white !important;
+        font-weight: bold !important;
+        box-shadow: 0 2px 8px rgba(0, 170, 0, 0.3) !important;
+        transition: all 0.3s ease !important;
+      }
+      
+      .mobile-button:hover {
+        background: linear-gradient(45deg, #00cc00, #00ff44) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(0, 170, 0, 0.4) !important;
+      }
+      
+      /* Estilos para mensaje final */
+      .mobile-final-container {
+        padding: 0 !important;
+      }
+      
+      .mobile-final-popup {
+        width: 95% !important;
+        max-width: 450px !important;
+        margin: 0 auto !important;
+        padding: 1rem !important;
+        border-radius: 15px !important;
+      }
+      
+      .mobile-final-title {
+        font-size: 16px !important;
+        line-height: 1.2 !important;
+        margin-bottom: 0.5rem !important;
+      }
+      
+      .mobile-final-content {
+        font-size: 13px !important;
+        line-height: 1.3 !important;
+        padding: 0.5rem 0 !important;
+      }
+      
+      .mobile-final-button {
+        font-size: 14px !important;
+        padding: 0.6rem 1.2rem !important;
+        margin-top: 1rem !important;
+        background: linear-gradient(45deg, #ff6600, #ff9900) !important;
+        border: none !important;
+        border-radius: 10px !important;
+        color: white !important;
+        font-weight: bold !important;
+        box-shadow: 0 3px 10px rgba(255, 102, 0, 0.4) !important;
+        transition: all 0.3s ease !important;
+      }
+      
+      .mobile-final-button:hover {
+        background: linear-gradient(45deg, #ff7700, #ffaa00) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 5px 15px rgba(255, 102, 0, 0.5) !important;
+      }
+      
+      /* Ajustes para pantallas muy pequeñas */
+      @media (max-width: 480px) {
+        .mobile-popup, .mobile-final-popup {
+          width: 95% !important;
+          padding: 0.8rem !important;
+        }
+        
+        .mobile-title, .mobile-final-title {
+          font-size: 16px !important;
+        }
+        
+        .mobile-content, .mobile-final-content {
+          font-size: 12px !important;
+        }
+        
+        .mobile-button, .mobile-final-button {
+          font-size: 13px !important;
+          padding: 0.5rem 1rem !important;
+        }
+      }
+      
+      /* Ajustes para pantallas extra pequeñas */
+      @media (max-width: 360px) {
+        .mobile-popup, .mobile-final-popup {
+          width: 98% !important;
+          padding: 0.6rem !important;
+        }
+        
+        .mobile-title, .mobile-final-title {
+          font-size: 15px !important;
+        }
+        
+        .mobile-content, .mobile-final-content {
+          font-size: 11px !important;
+        }
+        
+        .mobile-button, .mobile-final-button {
+          font-size: 12px !important;
+          padding: 0.4rem 0.8rem !important;
+        }
+      }
+    `;
+    
+    // Agregar el estilo al head del documento
+    document.head.appendChild(style);
   }
   
   crearAreaJuego() {
@@ -1282,124 +1424,126 @@ class Rompecabezas extends Phaser.Scene {
       '¡Nivel completado! Preparando siguiente fase de contención...' : 
       '¡Protocolo de contención completado! La estabilidad ha sido restaurada en NanoTerra.';
     
-    // Mostrar mensaje con SweetAlert2
+    // Mostrar mensaje con SweetAlert2 optimizado para móviles
     Swal.fire({
-      title: '¡Protocolo de Contención Activado!',
+      title: '¡Protocolo Activado!',
       text: mensaje,
       icon: 'success',
       confirmButtonText: 'Continuar',
+      width: '90%',
+      padding: '1rem',
       customClass: {
-        container: 'custom-container-class',
-        popup: 'custom-popup-class'
-      }
+        container: 'mobile-container',
+        popup: 'mobile-popup',
+        title: 'mobile-title',
+        content: 'mobile-content',
+        confirmButton: 'mobile-button'
+      },
+      buttonsStyling: false
     }).then(() => {
       if (this.nivelActual < this.nivelesMax) {
         // Pasar al siguiente nivel
         this.nivelActual++;
         this.iniciarJuego();
       } else {
-        // Mostrar mensaje de felicitaciones épico con animaciones
+        // Mostrar mensaje de felicitaciones optimizado para móviles
         Swal.fire({
-          title: '<div class="animated-title">🎉 ¡FELICITACIONES! 🎉</div>',
+          title: '<div class="mobile-animated-title">🎉 ¡FELICITACIONES! 🎉</div>',
           html: `
             <style>
-              @keyframes bounce {
+              @keyframes mobileBounce {
                 0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-                40% { transform: translateY(-30px); }
-                60% { transform: translateY(-15px); }
+                40% { transform: translateY(-15px); }
+                60% { transform: translateY(-8px); }
               }
-              @keyframes glow {
-                0% { text-shadow: 0 0 5px #00ff88, 0 0 10px #00ff88, 0 0 15px #00ff88; }
-                50% { text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88, 0 0 30px #00ff88; }
-                100% { text-shadow: 0 0 5px #00ff88, 0 0 10px #00ff88, 0 0 15px #00ff88; }
+              @keyframes mobileGlow {
+                0% { text-shadow: 0 0 3px #00ff88, 0 0 6px #00ff88; }
+                50% { text-shadow: 0 0 6px #00ff88, 0 0 12px #00ff88; }
+                100% { text-shadow: 0 0 3px #00ff88, 0 0 6px #00ff88; }
               }
-              @keyframes pulse {
+              @keyframes mobilePulse {
                 0% { transform: scale(1); }
-                50% { transform: scale(1.05); }
+                50% { transform: scale(1.02); }
                 100% { transform: scale(1); }
               }
-              @keyframes rainbow {
+              @keyframes mobileRainbow {
                 0% { color: #ff0000; }
-                16% { color: #ff8000; }
-                33% { color: #ffff00; }
+                25% { color: #ffff00; }
                 50% { color: #00ff00; }
-                66% { color: #0080ff; }
-                83% { color: #8000ff; }
+                75% { color: #0080ff; }
                 100% { color: #ff0000; }
               }
-              .animated-title {
-                animation: bounce 2s infinite, glow 2s ease-in-out infinite;
-                font-size: 28px !important;
+              .mobile-animated-title {
+                animation: mobileBounce 2s infinite, mobileGlow 2s ease-in-out infinite;
+                font-size: 18px !important;
                 font-weight: bold;
+                line-height: 1.2;
               }
-              .success-message {
-                animation: pulse 3s ease-in-out infinite;
-                font-size: 18px;
-                margin-bottom: 20px;
+              .mobile-success-message {
+                animation: mobilePulse 3s ease-in-out infinite;
+                font-size: 14px;
+                margin-bottom: 15px;
                 color: #00ff88;
-                text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+                text-shadow: 0 0 5px rgba(0, 255, 136, 0.5);
+                line-height: 1.3;
               }
-              .hero-message {
-                animation: glow 2s ease-in-out infinite;
-                font-size: 16px;
+              .mobile-hero-message {
+                animation: mobileGlow 2s ease-in-out infinite;
+                font-size: 12px;
                 color: #88ddff;
-                margin: 15px 0;
+                margin: 10px 0;
+                line-height: 1.3;
               }
-              .final-score {
-                animation: rainbow 3s linear infinite, pulse 2s ease-in-out infinite;
-                font-size: 20px;
+              .mobile-final-score {
+                animation: mobileRainbow 3s linear infinite, mobilePulse 2s ease-in-out infinite;
+                font-size: 16px;
                 font-weight: bold;
-                margin-top: 20px;
-                text-shadow: 0 0 15px rgba(255, 255, 0, 0.8);
+                margin-top: 15px;
+                text-shadow: 0 0 8px rgba(255, 255, 0, 0.8);
               }
-              .particles {
+              .mobile-particles {
                 position: absolute;
                 width: 100%;
                 height: 100%;
                 pointer-events: none;
                 overflow: hidden;
               }
-              .particle {
+              .mobile-particle {
                 position: absolute;
-                width: 4px;
-                height: 4px;
+                width: 3px;
+                height: 3px;
                 background: #ffff00;
                 border-radius: 50%;
-                animation: float 3s ease-in-out infinite;
+                animation: mobileFloat 3s ease-in-out infinite;
               }
-              @keyframes float {
-                0% { transform: translateY(100px) rotate(0deg); opacity: 1; }
-                100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+              @keyframes mobileFloat {
+                0% { transform: translateY(50px) rotate(0deg); opacity: 1; }
+                100% { transform: translateY(-50px) rotate(360deg); opacity: 0; }
               }
             </style>
-            <div class="particles">
-              <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
-              <div class="particle" style="left: 20%; animation-delay: 0.5s;"></div>
-              <div class="particle" style="left: 30%; animation-delay: 1s;"></div>
-              <div class="particle" style="left: 40%; animation-delay: 1.5s;"></div>
-              <div class="particle" style="left: 50%; animation-delay: 2s;"></div>
-              <div class="particle" style="left: 60%; animation-delay: 0.3s;"></div>
-              <div class="particle" style="left: 70%; animation-delay: 0.8s;"></div>
-              <div class="particle" style="left: 80%; animation-delay: 1.3s;"></div>
-              <div class="particle" style="left: 90%; animation-delay: 1.8s;"></div>
+            <div class="mobile-particles">
+              <div class="mobile-particle" style="left: 15%; animation-delay: 0s;"></div>
+              <div class="mobile-particle" style="left: 35%; animation-delay: 0.8s;"></div>
+              <div class="mobile-particle" style="left: 55%; animation-delay: 1.6s;"></div>
+              <div class="mobile-particle" style="left: 75%; animation-delay: 0.4s;"></div>
             </div>
-            <div class="success-message">✨ Has completado con éxito todos los niveles del Protocolo de Contención ✨</div>
-            <div class="hero-message">🦾 Tu habilidad y destreza han salvado a NanoTerra de la crisis de replicación descontrolada 🌍</div>
-            <div class="final-score">⭐ Puntuación final: ${this.puntos} ⭐</div>
+            <div class="mobile-success-message">✨ ¡Protocolo completado exitosamente! ✨</div>
+            <div class="mobile-hero-message">🦾 Has salvado NanoTerra 🌍</div>
+            <div class="mobile-final-score">⭐ Puntuación: ${this.puntos} ⭐</div>
           `,
           icon: 'success',
-          confirmButtonText: '🚀 Continuar a la siguiente misión',
+          confirmButtonText: '🚀 Siguiente Misión',
+          width: '90%',
+          padding: '1rem',
           background: 'linear-gradient(135deg, #000033 0%, #000066 50%, #000099 100%)',
-          backdrop: `
-            rgba(0,0,123,0.6)
-            url("assets/rompecabezas/Taller.png")
-            center top
-            no-repeat
-          `,
           customClass: {
-            title: 'custom-title-class',
-            confirmButton: 'custom-confirm-button-class'
+            container: 'mobile-final-container',
+            popup: 'mobile-final-popup',
+            title: 'mobile-final-title',
+            content: 'mobile-final-content',
+            confirmButton: 'mobile-final-button'
           },
+          buttonsStyling: false,
           showClass: {
             popup: 'animate__animated animate__bounceIn'
           },

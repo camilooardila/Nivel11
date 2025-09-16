@@ -1069,26 +1069,28 @@ class DroneRepairScene extends Phaser.Scene {
     const nextLevelButton = this.add.graphics();
     nextLevelButton.fillStyle(0x006600, 0.9);
     nextLevelButton.lineStyle(3, 0x00ff00, 1);
-    nextLevelButton.fillRoundedRect(300, 450, 200, 50, 10);
-    nextLevelButton.strokeRoundedRect(300, 450, 200, 50, 10);
+    nextLevelButton.fillRoundedRect(250, 450, 300, 50, 10);
+    nextLevelButton.strokeRoundedRect(250, 450, 300, 50, 10);
     
-    const nextLevelText = this.add.text(400, 475, '🚀 SIGUIENTE NIVEL', {
-      fontSize: '18px',
+    const nextLevelText = this.add.text(400, 475, '🚀 HAZ CLICK PARA EL SIGUIENTE NIVEL', {
+      fontSize: '16px',
       fontFamily: 'Orbitron, monospace',
       fill: '#ffffff',
-      fontWeight: 'bold'
+      fontWeight: 'bold',
+      stroke: '#000000',
+      strokeThickness: 1
     }).setOrigin(0.5);
     
     // Hacer el botón interactivo
-    const nextLevelZone = this.add.zone(400, 475, 200, 50).setInteractive();
+    const nextLevelZone = this.add.zone(400, 475, 300, 50).setInteractive();
     
     // Efectos hover del botón
     nextLevelZone.on('pointerover', () => {
       nextLevelButton.clear();
       nextLevelButton.fillStyle(0x00aa00, 1);
       nextLevelButton.lineStyle(3, 0x00ff00, 1);
-      nextLevelButton.fillRoundedRect(300, 450, 200, 50, 10);
-      nextLevelButton.strokeRoundedRect(300, 450, 200, 50, 10);
+      nextLevelButton.fillRoundedRect(250, 450, 300, 50, 10);
+      nextLevelButton.strokeRoundedRect(250, 450, 300, 50, 10);
       nextLevelText.setScale(1.1);
     });
     
@@ -1096,8 +1098,8 @@ class DroneRepairScene extends Phaser.Scene {
       nextLevelButton.clear();
       nextLevelButton.fillStyle(0x006600, 0.9);
       nextLevelButton.lineStyle(3, 0x00ff00, 1);
-      nextLevelButton.fillRoundedRect(300, 450, 200, 50, 10);
-      nextLevelButton.strokeRoundedRect(300, 450, 200, 50, 10);
+      nextLevelButton.fillRoundedRect(250, 450, 300, 50, 10);
+      nextLevelButton.strokeRoundedRect(250, 450, 300, 50, 10);
       nextLevelText.setScale(1);
     });
     
@@ -1127,6 +1129,27 @@ class DroneRepairScene extends Phaser.Scene {
         y: '-=10',
         duration: 500,
         ease: 'Back.easeOut'
+      });
+      
+      // Animación de escala del texto
+      this.tweens.add({
+        targets: nextLevelText,
+        scaleX: 1.05,
+        scaleY: 1.05,
+        duration: 1000,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+      
+      // Animación de brillo del botón
+      this.tweens.add({
+        targets: nextLevelButton,
+        alpha: 0.7,
+        duration: 800,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Power2'
       });
     });
     
